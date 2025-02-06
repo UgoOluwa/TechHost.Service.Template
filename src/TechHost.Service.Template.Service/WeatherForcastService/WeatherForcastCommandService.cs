@@ -34,7 +34,7 @@ public class WeatherForcastCommandService : IWeatherForcastCommandService
             return new BaseResponse<CreateWeatherForcastResponseDto>(new CreateWeatherForcastResponseDto(newEntity.Id), true, string.Empty, ResponseMessages.SetCreationSuccessMessage(ClassName));
         }
         catch (Exception ex) {
-            _logger.LogError(ex.ToString());
+            _logger.LogError(ex, ex.Message);
             return new BaseResponse<CreateWeatherForcastResponseDto>(null, false, string.Empty, ex.Message);
         }
         

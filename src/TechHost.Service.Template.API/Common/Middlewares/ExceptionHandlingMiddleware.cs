@@ -1,6 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
+﻿using System.Text.Json;
 using TechHost.Service.Template.Core.CustomResponses;
+using TechHost.Service.Template.Application.Commons.Exceptions;
 
 namespace TechHost.Service.Template.API.Common.Middlewares;
 
@@ -26,20 +26,37 @@ internal class ExceptionHandlingMiddleware : IMiddleware
         }
     }
 
-    private async Task HandleExceptionAsync(HttpContext httpContext, Exception exception)
+    private static async Task HandleExceptionAsync(HttpContext httpContext, Exception exception)
     {
         var statusCode = GetStatusCode(exception);
-        var response = new BaseErrorResponse<object>(new List<FluentValidation.Results.ValidationFailure>(), statusCode.ToString(), "Validation Error");
+        var response = new BaseErrorResponse(GetErrors(exception), statusCode.ToString(), exception.Message);
         httpContext.Response.ContentType = "application/json";
         httpContext.Response.StatusCode = statusCode;
         await httpContext.Response.WriteAsync(JsonSerializer.Serialize(response));
     }
 
-    private int GetStatusCode(Exception exception) =>
+    private static int GetStatusCode(Exception exception) =>
         exception switch
         {
             ValidationException => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status500InternalServerError
         };
+
+    private static HashSet<string> GetErrors(Exception exception)
+    {
+        HashSet<string> errorHash = new();
+        var counter = 0;
+        if (exception is ValidationException validationException)
+        {
+            errorHash = validationException.Errors.Select(x => $"{x.ErrorMessage}").ToHashSet<string>();
+        }
+
+        if (errorHash.Count == 1)
+        {
+            return errorHash;
+        }
+
+        return errorHash.Select(x => $"{++counter}. {x}").ToHashSet<string>();
+    }
 
 }

@@ -6,6 +6,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using TechHost.Service.Template.Application;
 using TechHost.Service.Template.Repository;
 using TechHost.Service.Template.Service;
+using TechHost.Service.Template.API.Common.Middlewares;
 
 namespace TechHost.Service.Template.API
 {
@@ -51,6 +52,10 @@ namespace TechHost.Service.Template.API
             builder.Services.AddInjectionService();
             builder.Services.AddInjectionApplication();
 
+
+            builder.Services.AddTransient<ExceptionHandlingMiddleware>();
+
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -76,7 +81,7 @@ namespace TechHost.Service.Template.API
 
             app.UseAuthorization();
 
-            //app.UseAppExceptionMiddleware();
+            app.UseAppExceptionMiddleware();
 
             app.MapControllers();
 
